@@ -1,9 +1,26 @@
+/*
+* Author: Akash Maji
+* Email: akashmaji@iisc.ac.in
+*/
+
 #include<iostream>
 #include<bits/stdc++.h>
 using namespace std;
 
-
-/* Parameters given in the question */
+/* Parameters with usual meaning given in the question */
+/*
+N: Number of input feature maps (Batch size)
+C: Number of input channels
+H: Height of the input feature map
+W: Width of the input feature map
+R: Height of the filter/kernel
+S: Width of the filter/kernel
+M: Number of output channels (number of filters)
+E: Height of the output feature map after convolution
+F: Width of the output feature map after convolution
+Ux: stride along x
+Uy: stride along y
+*/
 #define N 8
 #define M 32
 #define H 32
@@ -11,15 +28,20 @@ using namespace std;
 #define R 5
 #define S 5
 #define C 4
+
 /* Let us compute the size of OUTPUT map */
 /*
 Since, INPUT is 32*32 and FILTER is 5*5
 So, OUTPUT will be 28*28 assuming stride=1
+
+Formula: E * F = (H-R+1)*(W-S+1) for stride=1
+
 */
 #define Ux 1
 #define Uy 1
 #define E 28
 #define F 28
+
 
 double OUTPUT[N][M][F][E];
 double INPUT[N][C][H][W];
@@ -27,16 +49,18 @@ double FILTER[M][C][R][S];
 
 double BIAS[M];
 
-// Create a random device and a generator  
-std::random_device rd;  // Obtain a random number from hardware  
-std::mt19937 gen(rd());  // Seed the generator  
-std::uniform_real_distribution<> dis(-1.0, 1.0); // Define the range  
+/*Create a random device and a generator */ 
+std::random_device rd;  
+std::mt19937 gen(rd());   
+// Define the range as in question
+std::uniform_real_distribution<> dis(-1.0, 1.0);   
 double randomFloat;
 
 double get_random_value(){
     return dis(gen);
 }
 
+/* initialize OUTPUT, INPUT, FILTER, BIAS maps */
 void initialize_structures(){
 
     memset(OUTPUT, 0, N*M*F*E*sizeof(double));
@@ -63,10 +87,11 @@ void initialize_structures(){
         }
     }
     for(int m = 0; m < M; m++){
-        // BIAS[m] = get_random_value();
+        BIAS[m] = get_random_value();
     }
 }
 
+/* save the values into respective files */
 void save_to_files(){
     FILE* file;
 
@@ -104,7 +129,11 @@ void save_to_files(){
     }
     fclose(file);
 
-    file = fopen("OUTPUT.txt", "w");
+}
+
+void save_output(){
+    FILE* file;
+    file = fopen("OUTPUT1.txt", "w");
     assert(file != 0);
     for(int n = 0; n < N; n++){
         for(int m = 0; m < M; m++){
@@ -116,7 +145,6 @@ void save_to_files(){
         }
     }
     fclose(file);
-
 }
 
 /* implemenatation idea taken from course slides */
@@ -144,14 +172,15 @@ void naive_convolution(){
 
 
 int main(){
-
+    // initialize with random values
     initialize_structures();
-    
-    naive_convolution();
-
+    // save the files so that toeplitz convolution can use
+    // them for performance comparison, and same inputs, filters, bias.
     save_to_files();
-
-
+    // do naive convolution using 7-layer loop
+    naive_convolution();
+    // save the output into OUTPUT1.txt
+    save_output();
 
     return 0;
 }
